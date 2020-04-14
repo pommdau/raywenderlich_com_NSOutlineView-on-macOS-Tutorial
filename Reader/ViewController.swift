@@ -44,6 +44,18 @@ class ViewController: NSViewController {
     outlineView.reloadData()
   }
   
+  // ダブルクリック時の処理
+  @IBAction func doubleClickedItem(_ sender: NSOutlineView) {
+    let item = sender.item(atRow: sender.clickedRow)
+    if item is Feed {  // Feedに関して展開の処理を行う
+      if sender.isItemExpanded(item) {
+        sender.collapseItem(item)
+      } else {
+        sender.expandItem(item)
+      }
+    }
+  }
+  
 }
 
 extension ViewController: NSOutlineViewDataSource {
