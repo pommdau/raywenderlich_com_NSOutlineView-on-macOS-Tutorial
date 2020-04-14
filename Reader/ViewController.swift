@@ -85,12 +85,23 @@ extension ViewController: NSOutlineViewDelegate {
     var view: NSTableCellView?
     
     if let feed = item as? Feed {
-      view = outlineView.makeView(withIdentifier: NSUserInterfaceItemIdentifier(rawValue: "FeedCell"), owner: self) as? NSTableCellView
-      if let textField = view?.textField {  // NSTableViewCellは通常textFieldを持つ
-        textField.stringValue = feed.name
-        textField.sizeToFit()
+      
+      if tableColumn?.identifier == NSUserInterfaceItemIdentifier(rawValue: "DateColumn") {
+        // FeedのDateに関して、空にしておく
+        view = outlineView.makeView(withIdentifier: NSUserInterfaceItemIdentifier(rawValue: "DateCell"), owner: self) as? NSTableCellView
+        if let textField = view?.textField {
+          textField.stringValue = ""
+          textField.sizeToFit()
+        }
+      } else {
+        view = outlineView.makeView(withIdentifier: NSUserInterfaceItemIdentifier(rawValue: "FeedCell"), owner: self) as? NSTableCellView
+        if let textField = view?.textField {
+          textField.stringValue = feed.name
+          textField.sizeToFit()
+        }
       }
-    } else if let feedItem = item as? FeedItem {  // FeedItemに関して、2つのアイテムが有りidentifierで見分ける
+
+    } else if let feedItem = item as? FeedItem {  // FeedItemに関して、2つのアイテムが有りcolumnのidentifierで見分ける
       if tableColumn?.identifier == NSUserInterfaceItemIdentifier(rawValue: "DateColumn") {  // FeedItem->Dateの場合
         view = outlineView.makeView(withIdentifier: NSUserInterfaceItemIdentifier(rawValue: "DateCell"), owner: self) as? NSTableCellView
         
@@ -107,7 +118,22 @@ extension ViewController: NSOutlineViewDelegate {
       }
     }
 
-    
     return view
+  }
+    
+  // 選択された行の情報をWebViewに表示する
+  func outlineViewSelectionDidChange(_ notification: Notification) {
+    // 通知元がNSOutlineViewかどうかの確認
+    guard let outlineView = notification.object as? NSOutlineView else {
+      return
+    }
+    
+    let selectedIndex = outlineView.selectedRow
+    if let feedItem = outlineView.item(atRow: selectedIndex) as? FeedItem {
+      let url = URL(string: feedItem.url)
+      if let url = url {
+        self.webView.mainFrame.load(URLRequest(url: url))
+      }
+    }
   }
 }
