@@ -38,7 +38,41 @@ class ViewController: NSViewController {
       feeds = Feed.feedList(filePath)  // Feedの一覧を取得する
       print(feeds)
     }
+    outlineView.reloadData()
   }
   
 }
 
+extension ViewController: NSOutlineViewDataSource {
+  // オブジェクトの含めるchildrenの数を返す
+  // e.g. feedsであればFeedの数を、FeedであればFeed.childrenの数
+  // すべてのデータ階層で呼ばれる
+  // item = nilの場合、トップレベルの項目のChildrenの数を返す
+  // というか、itemが値を持つ場合は、closureを展開した場合に呼ばれるタイミングだったりする
+  func outlineView(_ outlineView: NSOutlineView, numberOfChildrenOfItem item: Any?) -> Int {
+    if let feed = item as? Feed {
+      return feed.children.count
+    }
+    
+    return feeds.count
+  }
+  
+  // 親に対する子の情報を与える
+  // item will be nil for the root object.
+  func outlineView(_ outlineView: NSOutlineView, child index: Int, ofItem item: Any?) -> Any {
+    if let feed = item as? Feed {
+      return feed.children[index]
+    }
+    
+    return feeds[index]
+  }
+  
+  // ここではFeedsのみ（Feedsに関してのときにitemがFeed？）展開可能である
+  func outlineView(_ outlineView: NSOutlineView, isItemExpandable item: Any) -> Bool {
+    if let feed = item as? Feed {
+      return feed.children.count > 0
+    }
+      
+    return false
+  }
+}
