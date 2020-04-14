@@ -56,6 +56,44 @@ class ViewController: NSViewController {
     }
   }
   
+  override func keyDown(with event: NSEvent) {
+    interpretKeyEvents([event])
+  }
+  
+  override func deleteBackward(_ sender: Any?) {
+    let selectedRow = outlineView.selectedRow
+    if selectedRow == -1 {
+      return
+    }
+    
+    outlineView.beginUpdates()  // outlineViewのアップデート開始
+    
+    // 選択された項目の取得
+    if let item = outlineView.item(atRow: selectedRow) {
+      if let item = item as? Feed {  // Feedの場合
+        // Feedの場合、feeds内のインデックスを取得し、削除処理を行う
+        if let index = self.feeds.index( where: {$0.name == item.name} ) {
+
+          self.feeds.remove(at: index)  // データからの削除
+          outlineView.removeItems(at: IndexSet(integer: selectedRow), inParent: nil, withAnimation: .slideLeft)  // アニメーション付きでNSOutlineViewから削除
+        }
+      } else if let item = item as? FeedItem {  // FeedItemの場合
+        // FeedItemが属するFeedとindexを検索
+        for feed in self.feeds {
+          if let index = feed.children.index( where: {$0.title == item.title} ) {
+            feed.children.remove(at: index)
+            outlineView.removeItems(at: IndexSet(integer: index), inParent: feed, withAnimation: .slideLeft)
+          }
+        }
+      }
+
+    }
+
+    
+    outlineView.endUpdates()  // outlineViewのアップデート終了
+    
+  }
+  
 }
 
 extension ViewController: NSOutlineViewDataSource {
