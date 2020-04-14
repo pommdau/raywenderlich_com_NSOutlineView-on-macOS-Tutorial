@@ -26,12 +26,15 @@ import WebKit
 class ViewController: NSViewController {
   
   var feeds = [Feed]()
+  var dateFormatter = DateFormatter()
   
   @IBOutlet weak var webView: WebView!
   @IBOutlet weak var outlineView: NSOutlineView!
   
   override func viewDidLoad() {
     super.viewDidLoad()
+    
+    dateFormatter.dateStyle = .short
     
     // Do any additional setup after loading the view.
     if let filePath = Bundle.main.path(forResource: "Feeds", ofType: "plist") {
@@ -74,5 +77,37 @@ extension ViewController: NSOutlineViewDataSource {
     }
       
     return false
+  }
+}
+
+extension ViewController: NSOutlineViewDelegate {
+  func outlineView(_ outlineView: NSOutlineView, viewFor tableColumn: NSTableColumn?, item: Any) -> NSView? {
+    var view: NSTableCellView?
+    
+    if let feed = item as? Feed {
+      view = outlineView.makeView(withIdentifier: NSUserInterfaceItemIdentifier(rawValue: "FeedCell"), owner: self) as? NSTableCellView
+      if let textField = view?.textField {  // NSTableViewCellは通常textFieldを持つ
+        textField.stringValue = feed.name
+        textField.sizeToFit()
+      }
+    } else if let feedItem = item as? FeedItem {  // FeedItemに関して、2つのアイテムが有りidentifierで見分ける
+      if tableColumn?.identifier == NSUserInterfaceItemIdentifier(rawValue: "DateColumn") {  // FeedItem->Dateの場合
+        view = outlineView.makeView(withIdentifier: NSUserInterfaceItemIdentifier(rawValue: "DateCell"), owner: self) as? NSTableCellView
+        
+        if let textField = view?.textField {
+          textField.stringValue = dateFormatter.string(from: feedItem.publishingDate)
+          textField.sizeToFit()
+        }
+      } else {  // FeedItem-titleの場合
+        view = outlineView.makeView(withIdentifier: NSUserInterfaceItemIdentifier(rawValue: "FeedItemCell"), owner: self) as? NSTableCellView
+        if let textField = view?.textField {
+          textField.stringValue = feedItem.title
+          textField.sizeToFit()
+        }
+      }
+    }
+
+    
+    return view
   }
 }
